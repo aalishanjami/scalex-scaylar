@@ -14,13 +14,12 @@ import {
   Ticket,
   Receipt,
   DollarSign,
+  UsersRound,
+  FileText,
+  Image,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserNav } from "@/components/layout/user-nav";
 import { Restricted } from "@/components/layout/restricted";
 import type { Permission } from "@/lib/types/role";
@@ -37,6 +36,12 @@ const navigation: NavigationItem[] = [
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    permissions: ["view_dashboard"],
+  },
+  {
+    name: "Our Team",
+    href: "/dashboard/team",
+    icon: UsersRound,
     permissions: ["view_dashboard"],
   },
   {
@@ -74,6 +79,18 @@ const navigation: NavigationItem[] = [
     href: "/dashboard/payroll",
     icon: DollarSign,
     permissions: ["manage_payroll", "view_payroll"],
+  },
+  {
+    name: "Policies",
+    href: "/dashboard/policies",
+    icon: FileText,
+    permissions: ["view_dashboard"],
+  },
+  {
+    name: "Gallery",
+    href: "/dashboard/gallery",
+    icon: Image,
+    permissions: ["view_dashboard"],
   },
 ];
 

@@ -13,6 +13,9 @@ import {
   Building2,
   Receipt,
   DollarSign,
+  UsersRound,
+  FileText,
+  Image,
 } from "lucide-react";
 import type { Permission } from "@/lib/types/role";
 
@@ -21,6 +24,12 @@ const routes = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    permissions: ["view_dashboard"] as Permission[],
+  },
+  {
+    title: "Our Team",
+    href: "/dashboard/team",
+    icon: UsersRound,
     permissions: ["view_dashboard"] as Permission[],
   },
   {
@@ -58,6 +67,18 @@ const routes = [
     href: "/dashboard/payroll",
     icon: DollarSign,
     permissions: ["manage_payroll", "view_payroll"] as Permission[],
+  },
+  {
+    title: "Policies",
+    href: "/dashboard/policies",
+    icon: FileText,
+    permissions: ["view_dashboard"] as Permission[],
+  },
+  {
+    title: "Gallery",
+    href: "/dashboard/gallery",
+    icon: Image,
+    permissions: ["view_dashboard"] as Permission[],
   },
 ];
 

@@ -92,7 +92,9 @@ export function ExpenseFilters({ filters, onFilterChange }: ExpenseFiltersProps)
             variant="outline"
             className={cn(
               "w-[240px] justify-start text-left font-normal",
-              !filters.dateRange.from && !filters.dateRange.to && "text-muted-foreground"
+              !filters.dateRange.from &&
+                !filters.dateRange.to &&
+                "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -134,3 +136,4 @@ export function ExpenseFilters({ filters, onFilterChange }: ExpenseFiltersProps)
       </Popover>
     </div>
   );
+}

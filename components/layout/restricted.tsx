@@ -12,6 +12,8 @@ interface RestrictedProps {
 export function Restricted({ children, permissions, permissions: requiredPermissions, requireAll = false }: RestrictedProps) {
   const { hasPermission, loading } = usePermissions();
 
+  console.log(hasPermission, "hasPermission");
+
   if (loading) return null;
 
   const hasAccess = requireAll

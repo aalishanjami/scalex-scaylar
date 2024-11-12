@@ -27,9 +27,7 @@ export function ExpenseStats() {
 
   const fetchStats = async () => {
     try {
-      const { data: expenses, error } = await supabase
-        .from('expenses')
-        .select(`
+      const { data: expenses, error } = await supabase.from("expenses").select(`
           amount,
           status,
           category,
@@ -43,13 +41,13 @@ export function ExpenseStats() {
       const stats: Stats = {
         total_expenses: expenses.reduce((acc, exp) => acc + exp.amount, 0),
         pending_amount: expenses
-          .filter(exp => exp.status === 'pending')
+          .filter((exp) => exp.status === "pending")
           .reduce((acc, exp) => acc + exp.amount, 0),
         approved_amount: expenses
-          .filter(exp => exp.status === 'approved')
+          .filter((exp) => exp.status === "approved")
           .reduce((acc, exp) => acc + exp.amount, 0),
         reimbursed_amount: expenses
-          .filter(exp => exp.status === 'reimbursed')
+          .filter((exp) => exp.status === "reimbursed")
           .reduce((acc, exp) => acc + exp.amount, 0),
         by_category: [],
         by_department: [],
@@ -57,21 +55,26 @@ export function ExpenseStats() {
 
       // Calculate category breakdown
       const categoryMap = new Map();
-      expenses.forEach(exp => {
-        const current = categoryMap.get(exp.category) || { amount: 0, count: 0 };
+      expenses.forEach((exp) => {
+        const current = categoryMap.get(exp.category) || {
+          amount: 0,
+          count: 0,
+        };
         categoryMap.set(exp.category, {
           amount: current.amount + exp.amount,
           count: current.count + 1,
         });
       });
-      stats.by_category = Array.from(categoryMap.entries()).map(([category, data]) => ({
-        category,
-        ...data,
-      }));
+      stats.by_category = Array.from(categoryMap.entries()).map(
+        ([category, data]) => ({
+          category,
+          ...data,
+        })
+      );
 
       // Calculate department breakdown
       const departmentMap = new Map();
-      expenses.forEach(exp => {
+      expenses.forEach((exp) => {
         const dept = exp.employees.department;
         const current = departmentMap.get(dept) || { amount: 0, count: 0 };
         departmentMap.set(dept, {
@@ -79,10 +82,12 @@ export function ExpenseStats() {
           count: current.count + 1,
         });
       });
-      stats.by_department = Array.from(departmentMap.entries()).map(([department, data]) => ({
-        department,
-        ...data,
-      }));
+      stats.by_department = Array.from(departmentMap.entries()).map(
+        ([department, data]) => ({
+          department,
+          ...data,
+        })
+      );
 
       setStats(stats);
     } catch (error: any) {
@@ -103,33 +108,33 @@ export function ExpenseStats() {
   const items = [
     {
       title: "Total Expenses",
-      value: stats.total_expenses.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      value: stats.total_expenses.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
       }),
       icon: DollarSign,
     },
     {
       title: "Pending Amount",
-      value: stats.pending_amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      value: stats.pending_amount.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
       }),
       icon: Clock,
     },
     {
       title: "Approved Amount",
-      value: stats.approved_amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      value: stats.approved_amount.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
       }),
       icon: CheckCircle,
     },
     {
       title: "Reimbursed Amount",
-      value: stats.reimbursed_amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      value: stats.reimbursed_amount.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
       }),
       icon: BanknoteIcon,
     },
@@ -159,3 +164,4 @@ export function ExpenseStats() {
       })}
     </div>
   );
+}

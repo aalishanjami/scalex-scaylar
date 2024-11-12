@@ -45,8 +45,9 @@ export function ExpenseList({ filters }: ExpenseListProps) {
   const fetchExpenses = async () => {
     try {
       let query = supabase
-        .from('expenses')
-        .select(`
+        .from("expenses")
+        .select(
+          `
           *,
           employee:employees!expenses_employee_id_fkey (
             first_name,
@@ -54,20 +55,21 @@ export function ExpenseList({ filters }: ExpenseListProps) {
             employee_id,
             department
           )
-        `)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .order("created_at", { ascending: false });
 
       if (filters.status) {
-        query = query.eq('status', filters.status);
+        query = query.eq("status", filters.status);
       }
       if (filters.category) {
-        query = query.eq('category', filters.category);
+        query = query.eq("category", filters.category);
       }
       if (filters.dateRange.from) {
-        query = query.gte('date', format(filters.dateRange.from, 'yyyy-MM-dd'));
+        query = query.gte("date", format(filters.dateRange.from, "yyyy-MM-dd"));
       }
       if (filters.dateRange.to) {
-        query = query.lte('date', format(filters.dateRange.to, 'yyyy-MM-dd'));
+        query = query.lte("date", format(filters.dateRange.to, "yyyy-MM-dd"));
       }
 
       const { data, error } = await query;
@@ -90,7 +92,10 @@ export function ExpenseList({ filters }: ExpenseListProps) {
   }, [filters]);
 
   const getStatusBadge = (status: ExpenseStatus) => {
-    const variants: Record<ExpenseStatus, "default" | "secondary" | "destructive"> = {
+    const variants: Record<
+      ExpenseStatus,
+      "default" | "secondary" | "destructive"
+    > = {
       pending: "secondary",
       approved: "default",
       rejected: "destructive",
@@ -121,14 +126,14 @@ export function ExpenseList({ filters }: ExpenseListProps) {
         <TableBody>
           {expenses.map((expense) => (
             <TableRow key={expense.id}>
-              <TableCell>{format(new Date(expense.date), 'PP')}</TableCell>
+              <TableCell>{format(new Date(expense.date), "PP")}</TableCell>
               <TableCell>
                 {expense.employee.first_name} {expense.employee.last_name}
               </TableCell>
-              <TableCell>{expense.category.replace('_', ' ')}</TableCell>
+              <TableCell>{expense.category.replace("_", " ")}</TableCell>
               <TableCell>
-                {expense.amount.toLocaleString('en-US', {
-                  style: 'currency',
+                {expense.amount.toLocaleString("en-US", {
+                  style: "currency",
                   currency: expense.currency,
                 })}
               </TableCell>
@@ -147,7 +152,7 @@ export function ExpenseList({ filters }: ExpenseListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => window.open(expense.receipt_url, '_blank')}
+                      onClick={() => window.open(expense.receipt_url, "_blank")}
                     >
                       <FileText className="h-4 w-4" />
                     </Button>
@@ -159,7 +164,10 @@ export function ExpenseList({ filters }: ExpenseListProps) {
         </TableBody>
       </Table>
 
-      <Dialog open={!!selectedExpense} onOpenChange={() => setSelectedExpense(null)}>
+      <Dialog
+        open={!!selectedExpense}
+        onOpenChange={() => setSelectedExpense(null)}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Expense Details</DialogTitle>
@@ -175,3 +183,4 @@ export function ExpenseList({ filters }: ExpenseListProps) {
       </Dialog>
     </>
   );
+}

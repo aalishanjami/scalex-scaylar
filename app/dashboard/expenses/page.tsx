@@ -41,10 +41,7 @@ export default function ExpensesPage() {
 
       <ExpenseStats />
 
-      <ExpenseFilters
-        filters={filters}
-        onFilterChange={setFilters}
-      />
+      <ExpenseFilters filters={filters} onFilterChange={setFilters} />
 
       <ExpenseList filters={filters} />
 
@@ -58,3 +55,4 @@ export default function ExpensesPage() {
       </Dialog>
     </div>
   );
+}
