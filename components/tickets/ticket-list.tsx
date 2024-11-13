@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import { Eye, MessageSquare } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -42,8 +42,9 @@ export function TicketList({ filters }: TicketListProps) {
   const fetchTickets = async () => {
     try {
       let query = supabase
-        .from('tickets')
-        .select(`
+        .from("tickets")
+        .select(
+          `
           *,
           created_by_user:employees!tickets_created_by_fkey(
             first_name,
@@ -52,9 +53,15 @@ export function TicketList({ filters }: TicketListProps) {
           assigned_to_user:employees!tickets_assigned_to_fkey(
             first_name,
             last_name
+          ),
+          department:departments!tickets_department_id_fkey(
+            id,
+            name,
+            description
           )
-        `)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .order("created_at", { ascending: false });
 
       if (filters.status) {
         query = query.eq('status', filters.status);
@@ -121,6 +128,7 @@ export function TicketList({ filters }: TicketListProps) {
             <TableHead>Type</TableHead>
             <TableHead>Priority</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Department</TableHead>
             <TableHead>Created By</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Actions</TableHead>
@@ -130,13 +138,17 @@ export function TicketList({ filters }: TicketListProps) {
           {tickets.map((ticket) => (
             <TableRow key={ticket.id}>
               <TableCell className="font-medium">{ticket.title}</TableCell>
-              <TableCell>{ticket.type.replace('_', ' ')}</TableCell>
+              <TableCell>{ticket.type.replace("_", " ")}</TableCell>
               <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
               <TableCell>{getStatusBadge(ticket.status)}</TableCell>
+              <TableCell>{ticket.department?.name || "N/A"}</TableCell>
               <TableCell>
-                {ticket.created_by_user.first_name} {ticket.created_by_user.last_name}
+                {ticket.created_by_user.first_name}{" "}
+                {ticket.created_by_user.last_name}
               </TableCell>
-              <TableCell>{format(new Date(ticket.created_at), 'PPp')}</TableCell>
+              <TableCell>
+                {format(new Date(ticket.created_at), "PPp")}
+              </TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button
@@ -153,7 +165,10 @@ export function TicketList({ filters }: TicketListProps) {
         </TableBody>
       </Table>
 
-      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+      <Dialog
+        open={!!selectedTicket}
+        onOpenChange={() => setSelectedTicket(null)}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Ticket Details</DialogTitle>

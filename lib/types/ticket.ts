@@ -11,7 +11,7 @@ export interface Ticket {
   status: TicketStatus;
   created_by: string;
   assigned_to: string | null;
-  department: string | null;
+  department_id: string | null;
   due_date: string | null;
   attachments: {
     name: string;
@@ -27,6 +27,11 @@ export interface Ticket {
   }[];
   created_at: string;
   updated_at: string;
+  department?: {
+    id: string;
+    name: string;
+    description: string;
+  };
 }
 
 export interface CreateTicketDTO {
@@ -35,7 +40,7 @@ export interface CreateTicketDTO {
   type: TicketType;
   priority: TicketPriority;
   assigned_to?: string;
-  department?: string;
+  department_id?: string;
   due_date?: string;
   attachments?: {
     name: string;

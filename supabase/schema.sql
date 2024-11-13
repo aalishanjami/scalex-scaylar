@@ -4,13 +4,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create custom types
 CREATE TYPE employee_status AS ENUM ('active', 'inactive');
 
+-- Create departments table first since employees will reference it
+CREATE TABLE departments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    manager_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Create the employees table
 CREATE TABLE employees (
     id UUID PRIMARY KEY REFERENCES auth.users(id),
     email TEXT NOT NULL UNIQUE,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    department TEXT NOT NULL,
+    department_id UUID REFERENCES departments(id),
     role TEXT NOT NULL,
     status employee_status NOT NULL DEFAULT 'active',
     date_of_joining DATE NOT NULL,
@@ -23,6 +33,11 @@ CREATE TABLE employees (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Now we can add the foreign key constraint for manager_id
+ALTER TABLE departments 
+ADD CONSTRAINT departments_manager_id_fkey 
+FOREIGN KEY (manager_id) REFERENCES employees(id);
 
 -- Create roles table
 CREATE TABLE roles (
@@ -66,21 +81,10 @@ CREATE TABLE tickets (
     status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'pending', 'resolved', 'closed')),
     created_by UUID NOT NULL REFERENCES employees(id),
     assigned_to UUID REFERENCES employees(id),
-    department TEXT,
+    department_id UUID REFERENCES departments(id),
     due_date DATE,
     attachments JSONB[] DEFAULT '{}',
     comments JSONB[] DEFAULT '{}',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Create departments table
-CREATE TABLE departments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    manager_id UUID REFERENCES employees(id),
-    budget DECIMAL(12,2) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -156,9 +160,67 @@ CREATE TABLE payroll_details (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Create events table
+CREATE TABLE events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    description TEXT,
+    date DATE NOT NULL,
+    location TEXT NOT NULL,
+    cover_image TEXT NOT NULL,
+    created_by UUID NOT NULL REFERENCES employees(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create event photos table
+CREATE TABLE event_photos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    caption TEXT,
+    uploaded_by UUID NOT NULL REFERENCES employees(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create event comments table
+CREATE TABLE event_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    photo_id UUID REFERENCES event_photos(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES employees(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create event reactions table
+CREATE TABLE event_reactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    photo_id UUID REFERENCES event_photos(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES employees(id),
+    type TEXT NOT NULL CHECK (type IN ('👍', '❤️', '😊', '🎉', '👏')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(event_id, photo_id, user_id)
+);
+
+-- Create company policies table
+CREATE TABLE company_policies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    description TEXT,
+    document_url TEXT NOT NULL,
+    category TEXT NOT NULL CHECK (category IN ('hr', 'it', 'finance', 'security', 'general', 'compliance')),
+    version TEXT NOT NULL,
+    effective_date DATE NOT NULL,
+    created_by UUID NOT NULL REFERENCES employees(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Create indexes
 CREATE INDEX idx_employee_id ON employees(employee_id);
-CREATE INDEX idx_employee_department ON employees(department);
+CREATE INDEX idx_employee_department ON employees(department_id);
 CREATE INDEX idx_employee_roles_employee ON employee_roles(employee_id);
 CREATE INDEX idx_employee_roles_role ON employee_roles(role_id);
 CREATE INDEX idx_attendance_date ON attendance(date);
@@ -177,6 +239,14 @@ CREATE INDEX idx_expenses_category ON expenses(category);
 CREATE INDEX idx_employee_payroll_items ON employee_payroll_items(employee_id);
 CREATE INDEX idx_payroll_period ON payroll(period_start, period_end);
 CREATE INDEX idx_payroll_status ON payroll(status);
+CREATE INDEX idx_events_date ON events(date);
+CREATE INDEX idx_event_photos_event ON event_photos(event_id);
+CREATE INDEX idx_event_comments_event ON event_comments(event_id);
+CREATE INDEX idx_event_comments_photo ON event_comments(photo_id);
+CREATE INDEX idx_event_reactions_event ON event_reactions(event_id);
+CREATE INDEX idx_event_reactions_photo ON event_reactions(photo_id);
+CREATE INDEX idx_policies_category ON company_policies(category);
+CREATE INDEX idx_policies_effective_date ON company_policies(effective_date);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION handle_updated_at()
@@ -233,6 +303,16 @@ CREATE TRIGGER set_employee_payroll_items_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION handle_updated_at();
 
+CREATE TRIGGER set_events_updated_at
+    BEFORE UPDATE ON events
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_updated_at();
+
+CREATE TRIGGER set_policies_updated_at
+    BEFORE UPDATE ON company_policies
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_updated_at();
+
 -- Function to check if user has permission
 CREATE OR REPLACE FUNCTION has_permission(user_id UUID, required_permission TEXT)
 RETURNS BOOLEAN AS $$
@@ -246,29 +326,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Enable Row Level Security
-ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employee_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payroll ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payroll_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE employee_payroll_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payroll_details ENABLE ROW LEVEL SECURITY;
+-- Insert default departments
+INSERT INTO departments (name, description) VALUES
+('Engineering', 'Software development and technical operations'),
+('Marketing', 'Brand management and marketing operations'),
+('Sales', 'Sales and business development'),
+('Human Resources', 'Employee management and recruitment'),
+('Finance', 'Financial planning and accounting'),
+('Operations', 'Business operations and logistics'),
+('Board', 'Direction, sales, growth and operations');
 
--- Insert default roles
+-- Insert default roles with their permissions
 INSERT INTO roles (name, description, permissions) VALUES
 ('C-Level', 'Executive level access', '[
     "view_dashboard",
     "manage_employees",
+    "view_employees",
     "manage_attendance",
+    "mark_attendance",
     "manage_departments",
+    "view_departments",
     "manage_expenses",
     "manage_payroll",
+    "view_payroll",
     "manage_tickets",
+    "create_tickets",
+    "view_own_tickets",
     "assign_roles"
 ]'),
 ('HR', 'Human Resources access', '[
@@ -318,12 +401,3 @@ INSERT INTO payroll_items (name, type, description, is_percentage, is_taxable) V
 ('Income Tax', 'deduction', 'Income tax deduction', true, false),
 ('Insurance', 'deduction', 'Health insurance premium', false, false),
 ('Pension', 'deduction', 'Pension contribution', true, false);
-
--- Insert default departments
-INSERT INTO departments (name, description, budget) VALUES
-('Engineering', 'Software development and technical operations', 1000000),
-('Marketing', 'Brand management and marketing operations', 500000),
-('Sales', 'Sales and business development', 750000),
-('Human Resources', 'Employee management and recruitment', 300000),
-('Finance', 'Financial planning and accounting', 400000),
-('Operations', 'Business operations and logistics', 600000);

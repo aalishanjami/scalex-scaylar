@@ -19,12 +19,26 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   date: z.string().min(1, "Date is required"),
   location: z.string().min(1, "Location is required"),
-  cover_image: z.instanceof(File, { message: "Cover image is required" }),
+  cover_image: z
+    .any()
+    .refine((file) => file?.size <= MAX_FILE_SIZE, "Max file size is 5MB")
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
+      "Only .jpg, .jpeg, .png and .webp formats are supported"
+    ),
 });
 
 interface CreateEventFormProps {
@@ -166,7 +180,7 @@ export function CreateEventForm({ onSuccess }: CreateEventFormProps) {
               <FormControl>
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) onChange(file);

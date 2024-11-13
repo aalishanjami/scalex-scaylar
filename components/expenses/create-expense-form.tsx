@@ -22,10 +22,19 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import type { ExpenseCategory } from "@/lib/types/expense";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
 
 const formSchema = z.object({
   category: z.enum([
@@ -41,7 +50,17 @@ const formSchema = z.object({
   currency: z.string().min(1, "Currency is required"),
   date: z.string().min(1, "Date is required"),
   description: z.string().min(1, "Description is required"),
-  receipt: z.instanceof(File).optional(),
+  receipt: z
+    .any()
+    .optional()
+    .refine(
+      (file) => !file || file?.size <= MAX_FILE_SIZE,
+      "Max file size is 5MB"
+    )
+    .refine(
+      (file) => !file || ACCEPTED_FILE_TYPES.includes(file?.type),
+      "Only .jpg, .jpeg, .png, .webp and .pdf formats are supported"
+    ),
   notes: z.string().optional(),
 });
 
@@ -246,7 +265,7 @@ export function CreateExpenseForm({ onSuccess }: CreateExpenseFormProps) {
               <FormControl>
                 <Input
                   type="file"
-                  accept="image/*,.pdf"
+                  accept={ACCEPTED_FILE_TYPES.join(",")}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) onChange(file);

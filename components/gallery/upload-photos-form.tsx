@@ -19,8 +19,29 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per photo
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
 const formSchema = z.object({
-  photos: z.array(z.instanceof(File)).min(1, "At least one photo is required"),
+  photos: z
+    .array(
+      z
+        .any()
+        .refine(
+          (file) => file?.size <= MAX_FILE_SIZE,
+          "Max file size is 5MB per photo"
+        )
+        .refine(
+          (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
+          "Only .jpg, .jpeg, .png and .webp formats are supported"
+        )
+    )
+    .min(1, "At least one photo is required"),
   captions: z.array(z.string()).optional(),
 });
 
@@ -119,7 +140,7 @@ export function UploadPhotosForm({
               <FormControl>
                 <Input
                   type="file"
-                  accept="image/*"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
                   multiple
                   onChange={handleFileChange}
                   {...field}

@@ -137,7 +137,10 @@ export function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -163,7 +166,10 @@ export function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Priority</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select priority" />
@@ -185,23 +191,25 @@ export function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="department"
+            name="department_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Department</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
-                    <SelectItem value="hr">Human Resources</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="operations">Operations</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

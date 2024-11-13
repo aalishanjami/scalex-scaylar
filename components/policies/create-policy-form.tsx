@@ -22,17 +22,37 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ACCEPTED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  category: z.enum(["hr", "it", "finance", "security", "general", "compliance"]),
+  category: z.enum([
+    "hr",
+    "it",
+    "finance",
+    "security",
+    "general",
+    "compliance",
+  ]),
   version: z.string().min(1, "Version is required"),
   effective_date: z.string().min(1, "Effective date is required"),
-  document: z.instanceof(File, { message: "Document is required" }),
+  document: z
+    .any()
+    .refine((file) => file?.size <= MAX_FILE_SIZE, "Max file size is 10MB")
+    .refine(
+      (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
+      "Only .pdf, .doc, and .docx formats are supported"
+    ),
 });
 
 interface CreatePolicyFormProps {
@@ -61,8 +81,8 @@ export function CreatePolicyForm({ onSuccess }: CreatePolicyFormProps) {
       // Upload document
       const fileExt = values.document.name.split('.').pop();
       const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const { data: fileData, error: fileError } = await supabase.storage
-        .from('policy-documents')
+      const { error: fileError } = await supabase.storage
+        .from("policy-documents")
         .upload(fileName, values.document);
 
       if (fileError) throw fileError;
@@ -145,7 +165,10 @@ export function CreatePolicyForm({ onSuccess }: CreatePolicyFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -203,7 +226,7 @@ export function CreatePolicyForm({ onSuccess }: CreatePolicyFormProps) {
               <FormControl>
                 <Input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept={ACCEPTED_FILE_TYPES.join(",")}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) onChange(file);
