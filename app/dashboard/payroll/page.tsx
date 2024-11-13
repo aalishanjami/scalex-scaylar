@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export default function PayrollPage() {
       </div>
 
       <PayrollSummary />
-      
+
       <PayrollList />
 
       <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>

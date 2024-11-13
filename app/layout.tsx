@@ -7,8 +7,18 @@ import { ThemeProvider } from '@/components/theme-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ScaleX - Modern HR Management',
-  description: 'Enterprise HR Management System by Scaylar Technologies',
+  title: "ScaleX - Modern HR Management",
+  description: "Enterprise HR Management System by Scaylar Technologies",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -18,6 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="robots" content="noindex,nofollow" />
+        <meta name="googlebot" content="noindex,nofollow" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"

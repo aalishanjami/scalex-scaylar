@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -48,25 +49,29 @@ export default function EmployeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const supabase = createClient();
 
   const fetchEmployees = async () => {
     try {
-      let query = supabase.from('employees').select('*');
-      
+      let query = supabase.from("employees").select("*");
+
       if (departmentFilter) {
-        query = query.eq('department', departmentFilter);
+        query = query.eq("department", departmentFilter);
       }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
+
+      const { data, error } = await query.order("created_at", {
+        ascending: false,
+      });
 
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error("Error fetching employees:", error);
     } finally {
       setLoading(false);
     }
@@ -97,12 +102,12 @@ export default function EmployeesPage() {
   };
 
   const filteredEmployees = employees.filter((employee) => {
-    const matchesSearch = 
+    const matchesSearch =
       employee.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.employee_id.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesSearch;
   });
 
@@ -127,7 +132,9 @@ export default function EmployeesPage() {
         </div>
         <Select
           value={departmentFilter || "all"}
-          onValueChange={(value) => setDepartmentFilter(value === "all" ? null : value)}
+          onValueChange={(value) =>
+            setDepartmentFilter(value === "all" ? null : value)
+          }
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="All Departments" />
@@ -167,7 +174,11 @@ export default function EmployeesPage() {
                 <TableCell>{employee.department}</TableCell>
                 <TableCell>{employee.role}</TableCell>
                 <TableCell>
-                  <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={
+                      employee.status === "active" ? "default" : "secondary"
+                    }
+                  >
                     {employee.status}
                   </Badge>
                 </TableCell>

@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PhotoView } from "./photo-view";
+import { PhotoView } from "@/components/gallery/photo-view";
 import type { EventPhoto } from "@/lib/types/gallery";
 
 interface PhotoGridProps {

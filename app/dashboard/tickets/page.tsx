@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,11 @@ import {
 import { CreateTicketForm } from "@/components/tickets/create-ticket-form";
 import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { TicketList } from "@/components/tickets/ticket-list";
-import type { TicketStatus, TicketType, TicketPriority } from "@/lib/types/ticket";
+import type {
+  TicketStatus,
+  TicketType,
+  TicketPriority,
+} from "@/lib/types/ticket";
 
 export default function TicketsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -36,10 +41,7 @@ export default function TicketsPage() {
         </Button>
       </div>
 
-      <TicketFilters
-        filters={filters}
-        onFilterChange={setFilters}
-      />
+      <TicketFilters filters={filters} onFilterChange={setFilters} />
 
       <TicketList filters={filters} />
 

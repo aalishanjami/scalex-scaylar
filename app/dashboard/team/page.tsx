@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,8 +28,9 @@ export default function TeamPage() {
   const fetchTeam = async () => {
     try {
       let query = supabase
-        .from('employees')
-        .select(`
+        .from("employees")
+        .select(
+          `
           *,
           roles:employee_roles (
             role:roles (
@@ -36,13 +38,14 @@ export default function TeamPage() {
               permissions
             )
           )
-        `)
-        .eq('status', 'active')
-        .order('department')
-        .order('first_name');
+        `
+        )
+        .eq("status", "active")
+        .order("department")
+        .order("first_name");
 
       if (departmentFilter) {
-        query = query.eq('department', departmentFilter);
+        query = query.eq("department", departmentFilter);
       }
 
       const { data, error } = await query;
@@ -67,13 +70,13 @@ export default function TeamPage() {
   // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
-      .channel('employees_changes')
+      .channel("employees_changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'employees',
+          event: "*",
+          schema: "public",
+          table: "employees",
         },
         () => {
           fetchTeam();
@@ -87,10 +90,12 @@ export default function TeamPage() {
   }, [departmentFilter]);
 
   const filteredTeam = team.filter((member) => {
-    const matchesSearch = 
-      `${member.first_name} ${member.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      `${member.first_name} ${member.last_name}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       member.role.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesSearch;
   });
 

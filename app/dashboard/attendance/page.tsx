@@ -1,4 +1,5 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -32,10 +33,10 @@ export default function AttendancePage() {
       const endDate = endOfMonth(date);
 
       const { data: attendanceData, error } = await supabase
-        .from('attendance')
-        .select('status')
-        .gte('date', format(startDate, 'yyyy-MM-dd'))
-        .lte('date', format(endDate, 'yyyy-MM-dd'));
+        .from("attendance")
+        .select("status")
+        .gte("date", format(startDate, "yyyy-MM-dd"))
+        .lte("date", format(endDate, "yyyy-MM-dd"));
 
       if (error) throw error;
 

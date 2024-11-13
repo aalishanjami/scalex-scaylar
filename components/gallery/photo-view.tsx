@@ -7,14 +7,19 @@ import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, X } from "lucide-react";
-import type { EventPhoto, EventComment, EventReaction, ReactionType } from "@/lib/types/gallery";
+import type {
+  EventPhoto,
+  EventComment,
+  EventReaction,
+  ReactionType,
+} from "@/lib/types/gallery";
 
 interface PhotoViewProps {
   photo: EventPhoto;
   onClose: () => void;
 }
 
-const reactionTypes: ReactionType[] = ['👍', '❤️', '😊', '🎉', '👏'];
+const reactionTypes: ReactionType[] = ["👍", "❤️", "😊", "🎉", "👏"];
 
 export function PhotoView({ photo, onClose }: PhotoViewProps) {
   const [comment, setComment] = useState("");
@@ -27,35 +32,37 @@ export function PhotoView({ photo, onClose }: PhotoViewProps) {
   const fetchComments = async () => {
     try {
       const { data, error } = await supabase
-        .from('event_comments')
-        .select(`
+        .from("event_comments")
+        .select(
+          `
           *,
           user:employees!event_comments_user_id_fkey (
             first_name,
             last_name
           )
-        `)
-        .eq('photo_id', photo.id)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .eq("photo_id", photo.id)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setComments(data || []);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error("Error fetching comments:", error);
     }
   };
 
   const fetchReactions = async () => {
     try {
       const { data, error } = await supabase
-        .from('event_reactions')
-        .select('*')
-        .eq('photo_id', photo.id);
+        .from("event_reactions")
+        .select("*")
+        .eq("photo_id", photo.id);
 
       if (error) throw error;
       setReactions(data || []);
     } catch (error) {
-      console.error('Error fetching reactions:', error);
+      console.error("Error fetching reactions:", error);
     }
   };
 
@@ -64,14 +71,12 @@ export function PhotoView({ photo, onClose }: PhotoViewProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('event_comments')
-        .insert({
-          photo_id: photo.id,
-          event_id: photo.event_id,
-          content: comment,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-        });
+      const { error } = await supabase.from("event_comments").insert({
+        photo_id: photo.id,
+        event_id: photo.event_id,
+        content: comment,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
 
       if (error) throw error;
 
@@ -91,37 +96,35 @@ export function PhotoView({ photo, onClose }: PhotoViewProps) {
   const handleReaction = async (type: ReactionType) => {
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      const existingReaction = reactions.find(r => r.user_id === userId);
+      const existingReaction = reactions.find((r) => r.user_id === userId);
 
       if (existingReaction) {
         if (existingReaction.type === type) {
           // Remove reaction
           await supabase
-            .from('event_reactions')
+            .from("event_reactions")
             .delete()
-            .eq('id', existingReaction.id);
+            .eq("id", existingReaction.id);
         } else {
           // Update reaction
           await supabase
-            .from('event_reactions')
+            .from("event_reactions")
             .update({ type })
-            .eq('id', existingReaction.id);
+            .eq("id", existingReaction.id);
         }
       } else {
         // Add new reaction
-        await supabase
-          .from('event_reactions')
-          .insert({
-            photo_id: photo.id,
-            event_id: photo.event_id,
-            user_id: userId,
-            type,
-          });
+        await supabase.from("event_reactions").insert({
+          photo_id: photo.id,
+          event_id: photo.event_id,
+          user_id: userId,
+          type,
+        });
       }
 
       fetchReactions();
     } catch (error) {
-      console.error('Error handling reaction:', error);
+      console.error("Error handling reaction:", error);
     }
   };
 
@@ -158,7 +161,7 @@ export function PhotoView({ photo, onClose }: PhotoViewProps) {
             >
               {type}
               <span className="ml-1">
-                {reactions.filter(r => r.type === type).length}
+                {reactions.filter((r) => r.type === type).length}
               </span>
             </Button>
           ))}
@@ -189,7 +192,7 @@ export function PhotoView({ photo, onClose }: PhotoViewProps) {
                     {comment.user.first_name} {comment.user.last_name}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {format(new Date(comment.created_at), 'PP')}
+                    {format(new Date(comment.created_at), "PP")}
                   </span>
                 </div>
                 <p className="text-sm">{comment.content}</p>
