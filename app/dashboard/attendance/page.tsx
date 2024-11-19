@@ -1,5 +1,4 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
 import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";

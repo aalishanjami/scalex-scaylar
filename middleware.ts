@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
     request: {
       headers: request.headers,
     },
-  })
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,59 +14,84 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value
+          return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value,
             ...options,
-          })
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
-          })
+          });
           response.cookies.set({
             name,
             value,
             ...options,
-          })
+          });
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({
             name,
-            value: '',
+            value: "",
             ...options,
-          })
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
-          })
+          });
           response.cookies.set({
             name,
-            value: '',
+            value: "",
             ...options,
-          })
+          });
         },
       },
     }
-  )
+  );
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Block access to the site from public networks (optional)
+  // const allowedIPs = process.env.ALLOWED_IPS?.split(',') || []
+  // const clientIP = request.ip || ''
+
+  // if (process.env.NODE_ENV === 'production' &&
+  //     allowedIPs.length > 0 &&
+  //     !allowedIPs.includes(clientIP)) {
+  //   return new NextResponse('Access Denied', { status: 403 })
+  // }
 
   // If no session and trying to access protected routes, redirect to login
-  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  if (!session && request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
   // If session exists and trying to access auth routes, redirect to dashboard
-  if (session && request.nextUrl.pathname.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (session && request.nextUrl.pathname.startsWith("/auth")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return response
+  // Add security headers
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    );
+  }
+
+  return response;
 }
 
 export const config = {
